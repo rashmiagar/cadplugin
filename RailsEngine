@@ -1,0 +1,74 @@
+The purpose here is to have a service that can give what the current version of a specific plugin is. Like that the currently installed plugin can itself claim an update.
+
+You can use an enum to identify the plugin, Integer, UUID, String I don't have a strong idea right now, maybe ask Mathieu.
+
+A way to do that so
+
+```
+Value | Name           |
+------|--------------- |
+0     | AutoCAD Plugin |
+1     | Revit Plugin   |
+     
+// GET /api/plugins/1
+
+curl -n -X GET http://<your-subdomain>.finalcad.com/api/plugins/1 \
+  -H "Content-Type: application/vnd.api+json"
+  -H "Accept: application/vnd.api+json"
+
+http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "plugin": {
+    "name": "AutoCAD Plugin",
+    "version": "v1.2.3"
+  }
+} 
+```
+
+The version is set by a call to the service. This call is realised by the author of the plugin after deployment, and when he decides to let know our partners, they need to download and install the latest version of the plugin.
+
+```
+// POST /api/plugins/:plugin_id
+
+curl -n -X POST http://<your-subdomain>.finalcad.com/api/plugins/1 \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Accept: application/vnd.api+json" \
+  -H "CLIENT: gKn1MionmYEDhRFCVM_OWQ" \
+  -H "AUTHORIZATION: CGp_eatQ6yp37rEy13U9uQ" \
+   -d '{ "plugin" : {
+          "name": "AutoCAD Plugin Silver",
+          "version": "v1.2.5"
+        }
+      }'
+```
+
+As we will put in place several data centre spread across regions we will not share data anymore. Hence you can't do that with our current API. You need to write a service as your preference, Sinatra, Rails, etc.
+
+The authentication should mimic API V4 authentication, nevertheless as we don't have any central mechanism to handle both user and authentication you need to write code about that, it could be an idea to write it in a different service, but it's up to you.
+
+```
+curl -n -X POST http://<your-subdomain>.finalcad.com/api/auth_tokens \
+  -H "Content-Type: application/vnd.api+json" \
+  -H "Accept: application/vnd.api+json" \
+  -d '{ "user": { 
+          "email": "some_email",
+          "password": "some_password"
+      }
+  }'
+
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+{
+  "auth_token": {
+    "token": "wwt045yhWUZSu8El0yM4DQ",
+    "expires_at": "2016-12-13T18:54:40.756+01:00"
+  }
+}
+```
+
+To store user, as we know there are only 2 for know, we can add it to the application itself for now. 
+
+The service can be hosted on Heroku, and the domain can be service.finalcad.com
